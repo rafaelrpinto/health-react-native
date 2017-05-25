@@ -1,0 +1,27 @@
+{
+  "extends": ["eslint:recommended", "plugin:react/recommended", "plugin:react-native/all"],
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module"
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "ecmaFeatures": {
+    "jsx": true
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-global-assign": "warn",
+    "no-console": "off",
+    "react-native/no-color-literals": "warn"
+  },
+  "plugins": [
+    "react",
+    "react-native"
+  ],
+  "globals": {
+        "fetch": false
+    }
+}
