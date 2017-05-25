@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {StyleSheet, Text, View, ActivityIndicator} from 'react-native';
 //project dependencies
 import CacheService from '../service/CacheService'
+import Home from './Home';
 
 /**
  * Spash screen that triggers the data loading.
@@ -54,11 +55,7 @@ export default class SplashScreen extends Component {
     }
 
     // data loaded, moving on...
-    return (
-      <View style={styles.container}>
-        <Text>OK!</Text>
-      </View>
-    );
+    return (<Home/>);
   }
 }
 
