@@ -28,6 +28,25 @@ ApiClient.getOpeningHours = async() => {
 }
 
 /**
+ * Retrieves all facility ids within 2km radius of a coordinate.
+ * @type {Promise} Promise to resolve an array of facility ids / coordinates.
+ */
+ApiClient.getNearestFacilities = async(latitude, longitude) => {
+  try {
+    let response = await fetch(`${API_ENDPOINT}/facility/nearest/id/${latitude}/${longitude}`);
+
+    setTimeout(() => null, 0); //remote debugging workaround
+
+    assertSuccess(response.status);
+    let responseJson = await response.json();
+    return responseJson;
+  } catch (err) {
+    console.log(`Error retrieving nearest facilties ${err}`);
+    throwInternalError();
+  }
+}
+
+/**
  * Retreives the medical services from the backend.
  */
 ApiClient.getServices = async() => {
@@ -43,7 +62,9 @@ ApiClient.getServices = async() => {
 async function getEnum(uri, errorDescription) {
   try {
     let response = await fetch(`${API_ENDPOINT}${uri}`);
-    setTimeout(() => null, 0);
+
+    setTimeout(() => null, 0); //remote debugging workaround
+
     assertSuccess(response.status);
     let responseJson = await response.json();
     return responseJson;

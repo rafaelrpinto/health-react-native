@@ -21,6 +21,6 @@ module.exports = StackNavigator({
 }, {
   navigationOptions: {
     header: false,
-    gesturesEnabled: true
+    gesturesEnabled: false
   }
 });

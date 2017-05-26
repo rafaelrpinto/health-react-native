@@ -1,9 +1,12 @@
 import React, {Component} from 'react';
-import {View, StyleSheet} from 'react-native';
+import {StyleSheet, ActivityIndicator, Button, Text} from 'react-native';
+import {Grid, Row} from 'react-native-elements';
 import PropTypes from 'prop-types';
 import MapView from 'react-native-maps';
 //project dependencies
-import theme from '../styles/theme'
+import theme from '../styles/theme';
+import ApiClient from '../api/ApiClient';
+import LocationService from '../service/LocationService';
 
 /**
  * Component that displays the map of facilities near specific coordinates.
@@ -15,42 +18,58 @@ export default class FacilitiesMap extends Component {
    */
   constructor(props) {
     super(props);
-    this.searchScheduled = false;
     this.state = {
-      region: {
-        latitude: props.latitude,
-        longitude: props.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-      }
+      searchPending: false,
+      searchInProgress: false,
+      region: LocationService.getDelta(props.latitude, props.longitude, 1500)
     }
   }
 
+  /**
+   * Initial data load.
+   */
   componentWillMount() {
     this.searchFacilities();
   }
 
-  async searchFacilities() {
-    console.log(`Searching Facilities: Lat ${this.state.region.latitude} Long ${this.state.region.longitude}`);
+  /**
+   * Called when the map region changes.
+   */
+  onRegionChange = (region) => {
+    this.setState({region, searchPending: true});
   }
 
-  onRegionChange = (region) => {
-    this.setState({region});
-    if (!this.searchScheduled) {
-      this.searchScheduled = true;
-      let self = this;
-      setTimeout(async() => {
-        await self.searchFacilities();
-        this.searchScheduled = false;
-      }, 1000);
-    }
+  /**
+   * Searched for facilities in the current coordinates.
+   */
+  searchFacilities = async() => {
+    console.log(`Searching Facilities: Lat ${this.state.region.latitude} Long ${this.state.region.longitude}`);
+    this.setState({searchInProgress: true, searchPending: false});
+
+    let facilities = await ApiClient.getNearestFacilities(this.state.region.latitude, this.state.region.longitude);
+    console.log(`Retreived ${facilities.length} facilities`);
+
+    //TODO group facilities and create markers...
+
+    this.setState({searchInProgress: false});
   }
 
   render() {
     return (
-      <View style ={theme.container.justified}>
-        <MapView.Animated style={styles.map} onRegionChange={this.onRegionChange} region={this.state.region}></MapView.Animated>
-      </View>
+      <Grid>
+        {this.state.searchPending && <Row style={theme.container.justified} size={1}>
+          <Button onPress={this.searchFacilities} title="Search this area" style={styles.button} color={theme.color.dark}/>
+        </Row>}
+
+        <Row size={10}>
+          <MapView.Animated style={styles.map} onRegionChange={this.onRegionChange} region={this.state.region}></MapView.Animated>
+        </Row>
+
+        {this.state.searchInProgress && <Row style={styles.loading} size={1}>
+          <ActivityIndicator size="large"/>
+          <Text>Loading facilities...</Text>
+        </Row>}
+      </Grid>
     );
   }
 }
@@ -64,5 +83,9 @@ FacilitiesMap.propTypes = {
 const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject
+  },
+  loading: {
+    ...theme.container.justified,
+    flexDirection: 'row'
   }
 });

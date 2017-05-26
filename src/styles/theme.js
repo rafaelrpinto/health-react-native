@@ -1,5 +1,3 @@
-import {PixelRatio} from 'react-native';
-
 /**
  * Basic color pallet of the app.
  * @type {String}
