@@ -56,7 +56,7 @@ theme.button = {
   },
   width: {
     regular: {
-      width: PixelRatio.getPixelSizeForLayoutSize(50)
+      //width: PixelRatio.getPixelSizeForLayoutSize(50)
     }
   }
 };

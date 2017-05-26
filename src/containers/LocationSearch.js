@@ -35,7 +35,7 @@ export default class LocationSearch extends Component {
       let location = await LocationService.getDeviceLocation();
       this.setState({location});
     } catch (err) {
-      console.log(`Error retreiving coordinates ${err}`);
+      console.log(`Error retreiving coordinates ${err} ${JSON.stringify(err)}`);
       this.setState({error: true});
     }
   }
@@ -77,9 +77,7 @@ export default class LocationSearch extends Component {
     }
 
     // device located, load the map...
-    return (
-      <Text><FacilitiesMap latitude={this.state.location.latitude} longitude={this.state.location.longitude}/></Text>
-    );
+    return (<FacilitiesMap latitude={this.state.location.latitude} longitude={this.state.location.longitude}/>);
   }
 }
 
