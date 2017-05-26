@@ -23,6 +23,8 @@
     "react-native"
   ],
   "globals": {
-    "fetch": false
+    "fetch": false,
+    "navigator": false,
+    "alert": false
   }
 }

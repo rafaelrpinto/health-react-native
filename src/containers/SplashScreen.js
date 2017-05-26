@@ -25,7 +25,7 @@ export default class SplashScreen extends Component {
   /**
    * Triggers the initial data load.
    */
-  async componentWillMount() {
+  componentWillMount() {
     this.connect();
   }
 
