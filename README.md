@@ -6,4 +6,5 @@ The app consumes [this API](https://github.com/rafaelrpinto/health-api).
 
 Still on early stages.
 
-<img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/main.png" width="500">
+
+<img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/main.png" width="350">
