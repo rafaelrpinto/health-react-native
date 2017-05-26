@@ -75,4 +75,9 @@ theme.container.center = {
   alignItems: 'center'
 }
 
+theme.container.justified = {
+  ...theme.container.center,
+  justifyContent: 'center'
+}
+
 export default theme;

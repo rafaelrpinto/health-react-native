@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {StyleSheet, View, PixelRatio} from 'react-native';
+import PropTypes from 'prop-types';
 import {Text, Button} from 'react-native-elements';
 //project dependencies
 import theme from '../styles/theme'
@@ -17,12 +18,18 @@ export default class Home extends Component {
     this.state = {}
   }
 
-  onPressByCityState() {
-    console.log(this.state);
+  /**
+   * Search by address selected.
+   */
+  onPressByCityState = () => {
+    this.props.navigation.navigate('AddressSearch');
   }
 
-  onPressCloseToMe() {
-    console.log(this.state);
+  /**
+   * Search by GPS location.
+   */
+  onPressCloseToMe = () => {
+    this.props.navigation.navigate('LocationSearch');
   }
 
   render() {
@@ -36,6 +43,7 @@ export default class Home extends Component {
       <View style={styles.buttonContainer}>
         <Button
           raised
+          onPress={this.onPressByCityState}
           icon={iconStyles.byAddress}
           buttonStyle={[theme.button.style, theme.button.width.regular]}
           textStyle={theme.button.text}
@@ -44,6 +52,7 @@ export default class Home extends Component {
       <View style={styles.buttonContainer}>
         <Button
           raised
+          onPress={this.onPressCloseToMe}
           icon={iconStyles.byLocation}
           buttonStyle={[theme.button.style, theme.button.width.regular]}
           textStyle={theme.button.text}
@@ -52,6 +61,13 @@ export default class Home extends Component {
     </View>;
   }
 }
+
+// prop validation
+Home.propTypes = {
+  navigation: PropTypes.object
+};
+
+//styles
 
 const styles = StyleSheet.create({
   buttonContainer: {
@@ -65,12 +81,12 @@ const styles = StyleSheet.create({
 const iconStyles = {
   byAddress: {
     ...theme.button.icon,
-    type:'font-awesome',
+    type: 'font-awesome',
     name: 'road'
   },
   byLocation: {
     ...theme.button.icon,
-    type:'font-awesome',
+    type: 'font-awesome',
     name: 'map-marker'
   }
 }
