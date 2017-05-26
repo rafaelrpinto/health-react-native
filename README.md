@@ -4,4 +4,6 @@ The goal of this project is to create an app using React Native that displays in
 
 The app consumes [this API](https://github.com/rafaelrpinto/health-api).
 
-Still on early stages, prints coming soon...
+Still on early stages.
+
+<img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/main.png" width="500">
