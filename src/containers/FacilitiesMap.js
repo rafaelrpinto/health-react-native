@@ -1,12 +1,19 @@
 import React, {Component} from 'react';
-import {StyleSheet, ActivityIndicator, Text, View, PixelRatio} from 'react-native';
-import {SideMenu, Icon, Button} from 'react-native-elements';
+import {
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+  View,
+  PixelRatio,
+  Dimensions
+} from 'react-native';
+import {SideMenu, Icon, Button, Badge} from 'react-native-elements';
 import PropTypes from 'prop-types';
 import MapView from 'react-native-maps';
+import supercluster from 'supercluster';
 //project dependencies
 import theme from '../styles/theme';
 import ApiClient from '../api/ApiClient';
-import LocationService from '../service/LocationService';
 
 /**
  * Component that displays the map of facilities near specific coordinates.
@@ -19,21 +26,36 @@ export default class FacilitiesMap extends Component {
   constructor(props) {
     super(props);
 
+    const {width, height} = Dimensions.get('window');
+    const ASPECT_RATIO = width / height;
+    const LATITUDE_DELTA = 0.0922;
+
     this.state = {
       isOpen: false,
       searchPending: false,
       searchInProgress: false,
-      markers: new Map(),
-      region: LocationService.getDelta(props.latitude, props.longitude, 1500)
+      facilities: [],
+      region: {
+        latitude: props.latitude,
+        longitude: props.longitude,
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LATITUDE_DELTA * ASPECT_RATIO
+      }
     }
 
     this.toggleSideMenu = this.toggleSideMenu.bind(this)
   }
 
+  /**
+   * Side menu change tracker.
+   */
   onSideMenuChange(isOpen : boolean) {
     this.setState({isOpen: isOpen})
   }
 
+  /**
+   * Side menu button pressed.
+   */
   toggleSideMenu() {
     this.setState({
       isOpen: !this.state.isOpen
@@ -55,6 +77,14 @@ export default class FacilitiesMap extends Component {
   }
 
   /**
+   * Search here button pressed.
+   */
+  onSearchHerePress = () => {
+    console.log('Search here pressed');
+    this.searchFacilities();
+  }
+
+  /**
    * Searched for facilities in the current coordinates.
    */
   searchFacilities = async() => {
@@ -67,36 +97,83 @@ export default class FacilitiesMap extends Component {
       let facilities = await ApiClient.getNearestFacilities(self.state.region.latitude, self.state.region.longitude);
       console.log(`Retreived ${facilities.length} facilities`);
 
-      for (let facility of facilities) {
-        if (!self.state.markers.has(facility.id)) {
-          self.state.markers.set(facility.id, facility);
-        }
-      }
+      //convert to geojson
+      facilities = facilities.map((facility) => {
+        return {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              parseFloat(facility.longitude),
+              parseFloat(facility.latitude)
+            ]
+          },
+          "properties": {
+            "facilityId": facility.id
+          }
+        };
+      });
 
-      this.setState({searchInProgress: false});
-    }, 1000);
+      this.setState({searchInProgress: false, facilities});
+    }, 2000);
   }
 
-  buildMarkers() {
-    let markers = [];
-    let key = 0;
-    for (let [id,
-      facility]of this.state.markers) {
-      markers.push(<MapView.Marker
-        key={key++}
+  /**
+   * Determined the icon to be used for each marker.
+   * @param  {Object} point A point in the map.
+   * @param  {Integer} i      Merket index.
+   * @return {Object}        A marker.
+   */
+  getMarkerIcon(point, i) {
+    if (point.properties.cluster) {
+      return <MapView.Marker
+        key={i}
+        onPress={() => console.log(point)}
         coordinate={{
-        latitude: parseFloat(facility.latitude),
-        longitude: parseFloat(facility.longitude)
-      }}
-        title={id}
-        description={'Desc'}/>);
+        latitude: point.geometry.coordinates[1],
+        longitude: point.geometry.coordinates[0]
+      }}>
+        <Badge value={point.properties.point_count}/>
+      </MapView.Marker>
+    } else {
+      return <MapView.Marker
+        key={i}
+        onPress={() => console.log(point)}
+        coordinate={{
+        latitude: point.geometry.coordinates[1],
+        longitude: point.geometry.coordinates[0]
+      }}>
+        <Icon name='medkit' type='font-awesome'/>
+      </MapView.Marker>
     }
-    return markers;
   }
 
-  onSearchHerePress = () => {
-    console.log('Search here pressed');
-    this.searchFacilities();
+  /**
+   * Builds the map markers.
+   * @return {Array} Of markers.
+   */
+  buildMarkers() {
+    var cluster = supercluster({radius: 50, maxZoom: 20});
+    cluster.load(this.state.facilities);
+    let region = this.state.region;
+    const padding = 0;
+    let clusters = cluster.getClusters([
+      region.longitude - (region.longitudeDelta * (0.5 + padding)),
+      region.latitude - (region.latitudeDelta * (0.5 + padding)),
+      region.longitude + (region.longitudeDelta * (0.5 + padding)),
+      region.latitude + (region.latitudeDelta * (0.5 + padding))
+    ], this.getZoomLevel());
+    return clusters.map(this.getMarkerIcon);
+  }
+
+  /**
+   * Zoom level for clustering.
+   */
+  getZoomLevel() {
+    // http://stackoverflow.com/a/6055653
+    const angle = this.state.region.longitudeDelta;
+    // 0.95 for finetuning zoomlevel grouping
+    return Math.round(Math.log(360 / angle) / Math.LN2);
   }
 
   render() {
