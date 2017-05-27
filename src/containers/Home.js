@@ -45,7 +45,7 @@ export default class Home extends Component {
           raised
           onPress={this.onPressByCityState}
           icon={iconStyles.byAddress}
-          buttonStyle={[theme.button.style, theme.button.width.regular]}
+          buttonStyle={theme.button.style}
           textStyle={theme.button.text}
           title={`By address`}/>
       </View>
@@ -54,7 +54,7 @@ export default class Home extends Component {
           raised
           onPress={this.onPressCloseToMe}
           icon={iconStyles.byLocation}
-          buttonStyle={[theme.button.style, theme.button.width.regular]}
+          buttonStyle={theme.button.style}
           textStyle={theme.button.text}
           title={`Near you`}/>
       </View>

@@ -45,17 +45,12 @@ theme.button = {
     borderRadius: 10
   },
   icon: {
-    size: 32
+    size: 26
   },
   text: {
     ...theme.font.regular,
     color: theme.color.light,
     textAlign: 'center'
-  },
-  width: {
-    regular: {
-      //width: PixelRatio.getPixelSizeForLayoutSize(50)
-    }
   }
 };
 
