@@ -7,13 +7,14 @@ import {
   PixelRatio,
   Dimensions
 } from 'react-native';
-import {SideMenu, Icon, Button, Badge} from 'react-native-elements';
+import {SideMenu, Icon, Button} from 'react-native-elements';
 import PropTypes from 'prop-types';
 import MapView from 'react-native-maps';
 import supercluster from 'supercluster';
 //project dependencies
 import theme from '../styles/theme';
 import ApiClient from '../api/ApiClient';
+import MapMarker from '../components/MapMarker'
 
 /**
  * Component that displays the map of facilities near specific coordinates.
@@ -119,59 +120,34 @@ export default class FacilitiesMap extends Component {
   }
 
   /**
-   * Determined the icon to be used for each marker.
-   * @param  {Object} point A point in the map.
-   * @param  {Integer} i      Merket index.
-   * @return {Object}        A marker.
-   */
-  getMarkerIcon(point, i) {
-    if (point.properties.cluster) {
-      return <MapView.Marker
-        key={i}
-        onPress={() => console.log(point)}
-        coordinate={{
-        latitude: point.geometry.coordinates[1],
-        longitude: point.geometry.coordinates[0]
-      }}>
-        <Badge value={point.properties.point_count}/>
-      </MapView.Marker>
-    } else {
-      return <MapView.Marker
-        key={i}
-        onPress={() => console.log(point)}
-        coordinate={{
-        latitude: point.geometry.coordinates[1],
-        longitude: point.geometry.coordinates[0]
-      }}>
-        <Icon name='medkit' type='font-awesome'/>
-      </MapView.Marker>
-    }
-  }
-
-  /**
    * Builds the map markers.
    * @return {Array} Of markers.
    */
   buildMarkers() {
+
+    console.log(`region.longitudeDelta=${this.state.region.longitudeDelta} region.latitudeDelta=${this.state.region.latitudeDelta}`);
+
     var cluster = supercluster({radius: 50, maxZoom: 20});
     cluster.load(this.state.facilities);
-    let region = this.state.region;
-    const padding = 0;
+    const padding = 0.25;
     let clusters = cluster.getClusters([
-      region.longitude - (region.longitudeDelta * (0.5 + padding)),
-      region.latitude - (region.latitudeDelta * (0.5 + padding)),
-      region.longitude + (region.longitudeDelta * (0.5 + padding)),
-      region.latitude + (region.latitudeDelta * (0.5 + padding))
+      this.state.region.longitude - (this.state.region.longitudeDelta * (0.5 + padding)),
+      this.state.region.latitude - (this.state.region.latitudeDelta * (0.5 + padding)),
+      this.state.region.longitude + (this.state.region.longitudeDelta * (0.5 + padding)),
+      this.state.region.latitude + (this.state.region.latitudeDelta * (0.5 + padding))
     ], this.getZoomLevel());
-    return clusters.map(this.getMarkerIcon);
+
+    console.log(clusters);
+
+    return clusters.map((point, i) => {
+      return <MapMarker point={point} key={i}/>
+    });
   }
 
-  /**
-   * Zoom level for clustering.
-   */
-  getZoomLevel() {
+  getZoomLevel(region = this.state.region) {
     // http://stackoverflow.com/a/6055653
-    const angle = this.state.region.longitudeDelta;
+    const angle = region.longitudeDelta;
+
     // 0.95 for finetuning zoomlevel grouping
     return Math.round(Math.log(360 / angle) / Math.LN2);
   }
