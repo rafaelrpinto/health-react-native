@@ -1,6 +1,8 @@
 import supercluster from 'supercluster';
 import {Dimensions} from 'react-native';
 
+const CLUSTER_MAX_ZOOM = 20;
+
 /**
  * Service that provides methos located to gps locations.
  */
@@ -29,6 +31,7 @@ LocationService.getDeviceLocation = () => {
 LocationService.toGeoJson = (facility) => {
   return {
     "type": "Feature",
+    "id": facility.id,
     "geometry": {
       "type": "Point",
       "coordinates": [
@@ -46,21 +49,53 @@ LocationService.toGeoJson = (facility) => {
  * Creates clusters of facilities.
  * @param  {Array} facilities Facilities to be clustered.
  * @param  {Object} region     Location region.
- * @return {Array}            Array of clusters.
+ * @return {Object}            Object with the cluster index and the clusters for theregion.
  */
 LocationService.createClusters = (facilities, region) => {
-  var cluster = supercluster({radius: 50, maxZoom: 20});
-  cluster.load(facilities.map((facility) => {
+  let index = supercluster({radius: 50, maxZoom: CLUSTER_MAX_ZOOM});
+  index.load(facilities.map((facility) => {
     return LocationService.toGeoJson(facility);
   }));
 
   const padding = 0.25;
-  return cluster.getClusters([
+  let clusters = index.getClusters([
     region.longitude - (region.longitudeDelta * (0.5 + padding)),
     region.latitude - (region.latitudeDelta * (0.5 + padding)),
     region.longitude + (region.longitudeDelta * (0.5 + padding)),
     region.latitude + (region.latitudeDelta * (0.5 + padding))
   ], LocationService.getZoomLevel(region));
+
+  return {index, clusters}
+}
+
+/**
+ * Backtracking search that retreives the facilities within a point.
+ * @param  {Object} point      Target point.
+ * @param  {Object} clusterIndex Global cluster index.
+ * @param  {Integer} zoomLevel    Current map zoom level.
+ * @return {Array}              Array of features with the facilities datda.
+ */
+LocationService.getClusterFacilities = (point, clusterIndex, zoomLevel) => {
+  if (point.id) {
+    //leaf node
+    return [point];
+  }
+
+  // try to get the childtren at this zoom level
+  let children = clusterIndex.getChildren(point.properties.cluster_id, zoomLevel);
+
+  // search deeper
+  zoomLevel++;
+
+  // get the child of the child...
+  let facilities = [];
+  for (let child of children) {
+    // get childrens facilities
+    facilities = facilities.concat(LocationService.getClusterFacilities(child, clusterIndex, zoomLevel));
+  }
+
+  // all of the facilities on this branch
+  return facilities;
 }
 
 /**

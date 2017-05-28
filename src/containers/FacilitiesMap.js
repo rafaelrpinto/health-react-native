@@ -97,20 +97,20 @@ export default class FacilitiesMap extends Component {
    * Deleted the calculated clusters
    */
   clearClusters() {
-    this.clusters = null;
+    this.clusterMap = null;
   }
 
   /**
    * Retreives the facillity clusters.
    * @return {Array} Array of facility clusters.
    */
-  getClusters() {
-    if (!this.clusters) {
+  getClusterMap() {
+    if (!this.clusterMap) {
       console.log(`Calculating cluster. lastZoom=${this.lastZoom} region=${JSON.stringify(this.state.region)}`);
       this.lastZoom = LocationService.getZoomLevel(this.state.region);
-      this.clusters = LocationService.createClusters(this.state.facilities, this.state.region);
+      this.clusterMap = LocationService.createClusters(this.state.facilities, this.state.region);
     }
-    return this.clusters;
+    return this.clusterMap;
   }
 
   /**
@@ -118,9 +118,9 @@ export default class FacilitiesMap extends Component {
    * @return {Array} Of markers.
    */
   buildMarkers() {
-    let clusters = this.getClusters();
-    return clusters.map((point, i) => {
-      return <Marker point={point} key={i}/>
+    let clusterMap = this.getClusterMap();
+    return clusterMap.clusters.map((point, i) => {
+      return <Marker point={point} clusterIndex={clusterMap.index} zoomLevel={this.lastZoom} key={i}/>
     });
   }
 
@@ -151,8 +151,9 @@ export default class FacilitiesMap extends Component {
               {this.state.searchInProgress && <ActivityIndicator size="large"/>}
             </View>
           </View>
-          <MapView showUserLocation={true} style={styles.map} onRegionChange={this.onRegionChange} region={this.state.region}>
+          <MapView loadingEnabled style={styles.map} onRegionChange={this.onRegionChange} region={this.state.region}>
             {this.buildMarkers()}
+
           </MapView>
         </View>
       </SideMenu>
