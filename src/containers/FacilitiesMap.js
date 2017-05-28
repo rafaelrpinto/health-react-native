@@ -133,7 +133,7 @@ export default class FacilitiesMap extends Component {
     )
 
     return (
-      <SideMenu isOpen={this.state.isSideMenuOpen} onChange={this.onSideMenuChange.bind(this)} menu={MenuComponent}>
+      <SideMenu isOpen={this.state.isSideMenuOpen} disableGestures={true} onChange={this.onSideMenuChange.bind(this)} menu={MenuComponent}>
         <View style={styles.container}>
           <View style={styles.topBar}>
             <View style={styles.menuIconContainer}>

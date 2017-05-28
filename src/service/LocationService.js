@@ -76,16 +76,13 @@ LocationService.createClusters = (facilities, region) => {
  * @return {Array}              Array of features with the facilities datda.
  */
 LocationService.getClusterFacilities = (point, clusterIndex, zoomLevel) => {
-  if (point.id) {
-    //leaf node
+  if (!point.properties.cluster) {
+    // not a cluster, return the facility
     return [point];
   }
 
   // try to get the childtren at this zoom level
-  let children = clusterIndex.getChildren(point.properties.cluster_id, zoomLevel);
-
-  // search deeper
-  zoomLevel++;
+  let children = clusterIndex.getChildren(point.properties.cluster_id, zoomLevel++);
 
   // get the child of the child...
   let facilities = [];

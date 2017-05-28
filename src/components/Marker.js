@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import LocationService from '../service/LocationService';
 
 /**
- * Container for address search.
+ * Map marker.
  */
 export default class Marker extends Component {
 
