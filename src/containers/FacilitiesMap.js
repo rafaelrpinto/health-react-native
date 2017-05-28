@@ -1,19 +1,13 @@
 import React, {Component} from 'react';
-import {
-  StyleSheet,
-  ActivityIndicator,
-  Text,
-  View,
-  PixelRatio,
-  Dimensions
-} from 'react-native';
-import {SideMenu, Icon, Button, Badge} from 'react-native-elements';
+import {StyleSheet, ActivityIndicator, Text, View, PixelRatio} from 'react-native';
+import {SideMenu, Icon, Button} from 'react-native-elements';
 import PropTypes from 'prop-types';
 import MapView from 'react-native-maps';
-import supercluster from 'supercluster';
 //project dependencies
 import theme from '../styles/theme';
 import ApiClient from '../api/ApiClient';
+import LocationService from '../service/LocationService'
+import Marker from '../components/Marker'
 
 /**
  * Component that displays the map of facilities near specific coordinates.
@@ -26,40 +20,31 @@ export default class FacilitiesMap extends Component {
   constructor(props) {
     super(props);
 
-    const {width, height} = Dimensions.get('window');
-    const ASPECT_RATIO = width / height;
-    const LATITUDE_DELTA = 0.0922;
+    this.lastZoom = 0;
+    this.clusters = null;
 
     this.state = {
-      isOpen: false,
+      isSideMenuOpen: false,
       searchPending: false,
       searchInProgress: false,
       facilities: [],
-      region: {
-        latitude: props.latitude,
-        longitude: props.longitude,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LATITUDE_DELTA * ASPECT_RATIO
-      }
+      region: LocationService.getRegion(props.latitude, props.longitude)
     }
 
-    this.toggleSideMenu = this.toggleSideMenu.bind(this)
   }
 
   /**
    * Side menu change tracker.
    */
-  onSideMenuChange(isOpen : boolean) {
-    this.setState({isOpen: isOpen})
+  onSideMenuChange = (isSideMenuOpen : boolean) => {
+    this.setState({isSideMenuOpen: isSideMenuOpen})
   }
 
   /**
    * Side menu button pressed.
    */
-  toggleSideMenu() {
-    this.setState({
-      isOpen: !this.state.isOpen
-    })
+  toggleSideMenu = () => {
+    this.onSideMenuChange(!this.state.isSideMenuOpen);
   }
 
   /**
@@ -73,6 +58,10 @@ export default class FacilitiesMap extends Component {
    * Called when the map region changes.
    */
   onRegionChange = (region) => {
+    if (this.lastZoom != LocationService.getZoomLevel(this.state.region)) {
+      // zoom changed, the clusters must be recalculated on render
+      this.clearClusters();
+    }
     this.setState({region, searchPending: true});
   }
 
@@ -97,55 +86,31 @@ export default class FacilitiesMap extends Component {
       let facilities = await ApiClient.getNearestFacilities(self.state.region.latitude, self.state.region.longitude);
       console.log(`Retreived ${facilities.length} facilities`);
 
-      //convert to geojson
-      facilities = facilities.map((facility) => {
-        return {
-          "type": "Feature",
-          "geometry": {
-            "type": "Point",
-            "coordinates": [
-              parseFloat(facility.longitude),
-              parseFloat(facility.latitude)
-            ]
-          },
-          "properties": {
-            "facilityId": facility.id
-          }
-        };
-      });
+      // clears clusters for recalculation
+      this.clearClusters();
 
       this.setState({searchInProgress: false, facilities});
     }, 2000);
   }
 
   /**
-   * Determined the icon to be used for each marker.
-   * @param  {Object} point A point in the map.
-   * @param  {Integer} i      Merket index.
-   * @return {Object}        A marker.
+   * Deleted the calculated clusters
    */
-  getMarkerIcon(point, i) {
-    if (point.properties.cluster) {
-      return <MapView.Marker
-        key={i}
-        onPress={() => console.log(point)}
-        coordinate={{
-        latitude: point.geometry.coordinates[1],
-        longitude: point.geometry.coordinates[0]
-      }}>
-        <Badge value={point.properties.point_count}/>
-      </MapView.Marker>
-    } else {
-      return <MapView.Marker
-        key={i}
-        onPress={() => console.log(point)}
-        coordinate={{
-        latitude: point.geometry.coordinates[1],
-        longitude: point.geometry.coordinates[0]
-      }}>
-        <Icon name='medkit' type='font-awesome'/>
-      </MapView.Marker>
+  clearClusters() {
+    this.clusters = null;
+  }
+
+  /**
+   * Retreives the facillity clusters.
+   * @return {Array} Array of facility clusters.
+   */
+  getClusters() {
+    if (!this.clusters) {
+      console.log(`Calculating cluster. lastZoom=${this.lastZoom} region=${JSON.stringify(this.state.region)}`);
+      this.lastZoom = LocationService.getZoomLevel(this.state.region);
+      this.clusters = LocationService.createClusters(this.state.facilities, this.state.region);
     }
+    return this.clusters;
   }
 
   /**
@@ -153,27 +118,10 @@ export default class FacilitiesMap extends Component {
    * @return {Array} Of markers.
    */
   buildMarkers() {
-    var cluster = supercluster({radius: 50, maxZoom: 20});
-    cluster.load(this.state.facilities);
-    let region = this.state.region;
-    const padding = 0;
-    let clusters = cluster.getClusters([
-      region.longitude - (region.longitudeDelta * (0.5 + padding)),
-      region.latitude - (region.latitudeDelta * (0.5 + padding)),
-      region.longitude + (region.longitudeDelta * (0.5 + padding)),
-      region.latitude + (region.latitudeDelta * (0.5 + padding))
-    ], this.getZoomLevel());
-    return clusters.map(this.getMarkerIcon);
-  }
-
-  /**
-   * Zoom level for clustering.
-   */
-  getZoomLevel() {
-    // http://stackoverflow.com/a/6055653
-    const angle = this.state.region.longitudeDelta;
-    // 0.95 for finetuning zoomlevel grouping
-    return Math.round(Math.log(360 / angle) / Math.LN2);
+    let clusters = this.getClusters();
+    return clusters.map((point, i) => {
+      return <Marker point={point} key={i}/>
+    });
   }
 
   render() {
@@ -185,7 +133,7 @@ export default class FacilitiesMap extends Component {
     )
 
     return (
-      <SideMenu isOpen={this.state.isOpen} onChange={this.onSideMenuChange.bind(this)} menu={MenuComponent}>
+      <SideMenu isOpen={this.state.isSideMenuOpen} onChange={this.onSideMenuChange.bind(this)} menu={MenuComponent}>
         <View style={styles.container}>
           <View style={styles.topBar}>
             <View style={styles.menuIconContainer}>
