@@ -12,5 +12,6 @@ Still on early stages.
 <img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/loadingData.png" width="300">
 <img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/loadingDataError.png" width="300">
 <img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/main.png" width="300">
-<img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/mapView.png" width="300">
+<img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/facilityCallout.png" width="300">
+<img src="https://github.com/rafaelrpinto/health-react-native/blob/master/prints/clusterCallout.png" width="300">
 </p>
