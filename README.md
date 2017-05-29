@@ -6,6 +6,15 @@ The app consumes [this API](https://github.com/rafaelrpinto/health-api).
 
 Still on early stages.
 
+### TODO
+
+- Address Search
+- i18n en/pt_BR
+- Display facility details
+- List/detail facilities in a map cluster
+- Filters (facility type, services, opening hours, etc...)
+- Better layout
+
 ### Prints (so far)
 
 <p align="center">
