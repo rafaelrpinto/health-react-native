@@ -80,17 +80,13 @@ export default class FacilitiesMap extends Component {
     console.log(`Searching Facilities: Lat ${this.state.region.latitude} Long ${this.state.region.longitude}`);
     this.setState({searchInProgress: true, searchPending: false, lastSearchedRegion: this.state.region});
 
-    //FIXME using settimeout to simulate latency and show loading icons
-    let self = this;
-    setTimeout(async() => {
-      let facilities = await ApiClient.getNearestFacilities(self.state.region.latitude, self.state.region.longitude);
-      console.log(`Retreived ${facilities.length} facilities`);
+    let facilities = await ApiClient.getNearestFacilities(this.state.region.latitude, this.state.region.longitude);
+    console.log(`Retreived ${facilities.length} facilities`);
 
-      // clears clusters for recalculation
-      this.clearClusters();
+    // clears clusters for recalculation
+    this.clearClusters();
 
-      this.setState({searchInProgress: false, facilities});
-    }, 2000);
+    this.setState({searchInProgress: false, facilities});
   }
 
   /**

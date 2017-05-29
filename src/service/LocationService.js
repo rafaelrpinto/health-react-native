@@ -40,7 +40,7 @@ LocationService.toGeoJson = (facility) => {
       ]
     },
     "properties": {
-      "facilityId": facility.id
+      "facility": facility
     }
   };
 }

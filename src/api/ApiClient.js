@@ -33,7 +33,7 @@ ApiClient.getOpeningHours = async() => {
  */
 ApiClient.getNearestFacilities = async(latitude, longitude) => {
   try {
-    let response = await fetch(`${API_ENDPOINT}/facility/nearest/id/${latitude}/${longitude}`);
+    let response = await fetch(`${API_ENDPOINT}/facility/nearest/${latitude}/${longitude}`);
 
     setTimeout(() => null, 0); //remote debugging workaround
 
